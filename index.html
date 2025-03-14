@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to bottom right, #4A90E2, #9013FE);
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid gray;
+            text-align: center;
+        }
+        .tab-button {
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 4px solid transparent;
+            cursor: pointer;
+            display: inline-block;
+            width: 50%;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .active-tab {
+            border-bottom: 4px solid blue;
+            color: blue;
+        }
+        .input-box {
+            width: 100%;
+            text-align: right;
+            font-size: 18px;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 2px solid gray;
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+            border: 2px solid gray;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            background: gray;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .input-row .input-box {
+            flex: 1;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 500px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+            .input-box {
+                font-size: 16px;
+                padding: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <div id="tab1" class="tab-button active-tab" onclick="showTab(1)">Advanced Calculator</div>
+            <div id="tab2" class="tab-button" onclick="showTab(2)">Find the Proportional Value</div>
+        </div>
+        
+        <div id="calculator-tab">
+            <h2>Advanced Calculator</h2>
+            <input id="display" class="input-box" type="text" disabled>
+            <div class="grid">
+                <button class="btn" onclick="clearDisplay()">C</button>
+                <button class="btn" onclick="appendToDisplay('/')">/</button>
+                <button class="btn" onclick="appendToDisplay('*')">*</button>
+                <button class="btn" onclick="appendToDisplay('-')">-</button>
+                <button class="btn" onclick="appendToDisplay('7')">7</button>
+                <button class="btn" onclick="appendToDisplay('8')">8</button>
+                <button class="btn" onclick="appendToDisplay('9')">9</button>
+                <button class="btn" onclick="appendToDisplay('+')">+</button>
+                <button class="btn" onclick="appendToDisplay('4')">4</button>
+                <button class="btn" onclick="appendToDisplay('5')">5</button>
+                <button class="btn" onclick="appendToDisplay('6')">6</button>
+                <button class="btn" onclick="calculateResult()">=</button>
+                <button class="btn" onclick="appendToDisplay('1')">1</button>
+                <button class="btn" onclick="appendToDisplay('2')">2</button>
+                <button class="btn" onclick="appendToDisplay('3')">3</button>
+                <button class="btn" onclick="appendToDisplay('0')">0</button>
+                <button class="btn" onclick="appendToDisplay('.')">.</button>
+            </div>
+        </div>
+        
+        <div id="proportional-tab" class="hidden">
+            <h3>Find the Proportional Value</h3>
+            <div class="input-row">
+                <input id="a" type="number" placeholder="A" class="input-box">
+                <input id="b" type="number" placeholder="B" class="input-box">
+            </div>
+            <div class="input-row">
+                <input id="a1" type="number" placeholder="A1" class="input-box">
+                <input id="b1" type="text" placeholder="B1 (Result)" class="input-box" disabled>
+            </div>
+            <button class="btn" onclick="calculateProportion()">Calculate B1</button>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabNumber) {
+            document.getElementById('calculator-tab').classList.toggle('hidden', tabNumber !== 1);
+            document.getElementById('proportional-tab').classList.toggle('hidden', tabNumber !== 2);
+            document.getElementById('tab1').classList.toggle('active-tab', tabNumber === 1);
+            document.getElementById('tab2').classList.toggle('active-tab', tabNumber === 2);
+        }
+    </script>
+</body>
+</html>
