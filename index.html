@@ -122,11 +122,11 @@
         <div id="proportional-tab" class="hidden">
             <h3>Find the Proportional Value</h3>
             <div class="input-row">
-                <input id="a" type="number" placeholder="A" class="input-box">
-                <input id="b" type="number" placeholder="B" class="input-box">
+                <input id="a" type="text" placeholder="A" class="input-box" oninput="formatInputField(this)">
+                <input id="b" type="text" placeholder="B" class="input-box" oninput="formatInputField(this)">
             </div>
             <div class="input-row">
-                <input id="a1" type="number" placeholder="A1" class="input-box">
+                <input id="a1" type="text" placeholder="A1" class="input-box" oninput="formatInputField(this)">
                 <input id="b1" type="text" placeholder="B1 (Result)" class="input-box" disabled>
             </div>
             <div class="button-row">
@@ -137,6 +137,11 @@
     </div>
 
     <script>
+        // Initialize calculator display
+        window.onload = function() {
+            clearDisplay();
+        };
+        
         function showTab(tabNumber) {
             document.getElementById('calculator-tab').classList.toggle('hidden', tabNumber !== 1);
             document.getElementById('proportional-tab').classList.toggle('hidden', tabNumber !== 2);
@@ -144,29 +149,159 @@
             document.getElementById('tab2').classList.toggle('active-tab', tabNumber === 2);
         }
         
+        // Helper function to format numbers with commas as thousands separators
+        function formatNumber(num) {
+            if (num === '' || isNaN(num)) return '';
+            
+            // Handle numbers with decimal points
+            let parts = num.toString().split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            return parts.join('.');
+        }
+        
+        // Helper function to remove commas from formatted numbers
+        function unformatNumber(str) {
+            return str.toString().replace(/,/g, '');
+        }
+        
+        // Format input field as user types
+        function formatInputField(input) {
+            let cursorPosition = input.selectionStart;
+            let originalLength = input.value.length;
+            
+            // Store original value and cursor position
+            let value = unformatNumber(input.value);
+            
+            // Only allow numbers and decimal point
+            value = value.replace(/[^0-9.]/g, '');
+            
+            // Format the number
+            let formattedValue = formatNumber(value);
+            input.value = formattedValue;
+            
+            // Adjust cursor position based on change in length
+            let newLength = input.value.length;
+            let lengthDifference = newLength - originalLength;
+            cursorPosition += lengthDifference;
+            
+            // Restore cursor position
+            input.setSelectionRange(cursorPosition, cursorPosition);
+        }
+        
+        // Variables to track calculator state
+        let currentNumber = '';
+        let displayExpression = '';
+        let waitingForOperand = false;
+        
         // Calculator functions
         function appendToDisplay(value) {
-            document.getElementById('display').value += value;
+            const display = document.getElementById('display');
+            const currentValue = display.value;
+            
+            // Check if the value is an operator
+            const isOperator = ['+', '-', '*', '/'].includes(value);
+            
+            if (isOperator) {
+                // If we have an operator, we don't format it
+                waitingForOperand = true;
+                
+                // If the display is empty and the operator is minus, allow it as a negative sign
+                if (currentValue === '' && value === '-') {
+                    display.value = '-';
+                    return;
+                }
+                
+                // Add spaces around operators for better readability
+                if (currentValue !== '') {
+                    // Remove any trailing spaces first
+                    let trimmedValue = currentValue.trim();
+                    
+                    // Check if the last character is already an operator
+                    let lastChar = trimmedValue[trimmedValue.length - 1];
+                    if (['+', '-', '*', '/'].includes(lastChar)) {
+                        // Replace the previous operator
+                        display.value = trimmedValue.slice(0, -1) + value;
+                    } else {
+                        // Add the operator with spaces
+                        display.value = trimmedValue + ' ' + value + ' ';
+                    }
+                }
+            } else {
+                // If it's a digit or decimal point
+                if (waitingForOperand) {
+                    // If we were waiting for an operand, start a new number
+                    currentNumber = value;
+                    waitingForOperand = false;
+                } else {
+                    // Otherwise append to the current number
+                    currentNumber += value;
+                }
+                
+                // Format the current part of the expression
+                let parts = display.value.split(' ');
+                if (parts.length > 0) {
+                    // If we're in the middle of an expression, format just the current number
+                    if (['+', '-', '*', '/'].includes(parts[parts.length - 2])) {
+                        parts[parts.length - 1] = formatNumber(currentNumber);
+                        display.value = parts.join(' ');
+                    } else {
+                        // We're at the start or have just one number
+                        display.value = formatNumber(currentNumber);
+                    }
+                } else {
+                    // Empty display, just show the formatted number
+                    display.value = formatNumber(value);
+                }
+            }
         }
         
         function clearDisplay() {
             document.getElementById('display').value = '';
+            currentNumber = '';
+            waitingForOperand = false;
         }
         
         function calculateResult() {
             try {
-                const result = eval(document.getElementById('display').value);
-                document.getElementById('display').value = result;
+                const display = document.getElementById('display');
+                
+                // Remove commas and extra spaces before evaluation
+                const expression = display.value.replace(/,/g, '').replace(/\s+/g, ' ').trim();
+                
+                // Replace formatted operators with JS operators
+                const jsExpression = expression.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                const result = eval(jsExpression);
+                
+                // Format the result with commas if it's a number
+                if (Number.isFinite(result)) {
+                    // Check if it's an integer or has decimals
+                    if (Number.isInteger(result)) {
+                        display.value = formatNumber(result);
+                    } else {
+                        // Format with up to 2 decimal places and add commas
+                        const roundedResult = parseFloat(result.toFixed(2));
+                        display.value = formatNumber(roundedResult);
+                    }
+                    
+                    // Update the current number to the result
+                    currentNumber = result.toString();
+                    waitingForOperand = true;
+                } else {
+                    display.value = result;
+                }
             } catch (error) {
                 document.getElementById('display').value = 'Error';
+                currentNumber = '';
+                waitingForOperand = true;
             }
         }
         
         // Proportion calculator
         function calculateProportion() {
-            const a = parseFloat(document.getElementById('a').value);
-            const b = parseFloat(document.getElementById('b').value);
-            const a1 = parseFloat(document.getElementById('a1').value);
+            const a = parseFloat(unformatNumber(document.getElementById('a').value));
+            const b = parseFloat(unformatNumber(document.getElementById('b').value));
+            const a1 = parseFloat(unformatNumber(document.getElementById('a1').value));
             
             if (isNaN(a) || isNaN(b) || isNaN(a1) || a === 0) {
                 document.getElementById('b1').value = 'Error';
@@ -175,7 +310,9 @@
             
             // Calculate B1 using the proportion formula: B1 = (b * a1) / a
             const b1 = (b * a1) / a;
-            document.getElementById('b1').value = b1.toFixed(2);
+            
+            // Format the result with commas and 2 decimal places
+            document.getElementById('b1').value = formatNumber(parseFloat(b1.toFixed(2)));
         }
         
         // Clear all inputs in the proportion calculator
